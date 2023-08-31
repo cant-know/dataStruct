@@ -1,67 +1,118 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define QueueMax 100
 
 typedef struct Node
 {
-  int data;
-  struct Node* next;
-}Node;
+    int data;
+    struct Node *LChild, *RChild;
+}BiNode, *BiTree;
 
-Node* initList(){
-  Node* list = (Node*)malloc(sizeof(Node));
-  list->data = 0;
-  list->next = list;
-  return list;
+typedef struct
+{
+    BiTree data[QueueMax];
+    int head;
+    int rear;
+    int len;
+}Queue;
+
+BiTree CreateTree();  //建立二叉树
+Queue InitQueue();  //初始化队列
+int IsEmptyQueue(Queue seq);  //队列判空
+int IsFullQueue(Queue seq);   //队列判满
+void PushQueue(Queue *seq, BiTree T);  //入队
+void PopQueue(Queue *seq, BiTree *T);  //出队
+void LayerOrder(BiTree T);  //层序遍历
+
+int main()
+{
+    BiTree T;
+    T = CreateTree();
+    LayerOrder(T);
+    return 0;
 }
 
-void headInsert(Node* list,int data){
-  Node* node = (Node*)malloc(sizeof(Node));
-  node->data = data;
-  node->next = list->next;
-  list->next = node;
-  list->data++;
-}
-
-void tailInsert(Node* list,int data){
-  list->data++;
-  Node* n = list;
-  Node* node = (Node*)malloc(sizeof(Node));
-  node->data = data;
-  while (n->next != list)
-  {
-    n = n->next;
-  }
-  node->next = list;
-  n->next = node;
-}
-
-void deleteInsert(Node* list,int data){
-  Node* pre = list;
-  Node* cur = list->next;
-  while (cur)
-  {
-    if(cur->data == data){
-      pre->next = cur->next;
-      free(cur);
-      break;
+BiTree CreateTree()
+{  //建立二叉树
+    int c;
+    c = getchar();
+    BiTree T;
+    if (c == -1) {
+        return NULL;
     }
-    pre->next = cur;
-    cur = cur->next;
-  }
-  list->data--;
+    T = (BiTree) malloc (sizeof(BiNode));
+    T->data = c;
+    T->LChild = CreateTree();
+    T->RChild = CreateTree();
+    return T;
 }
 
-void printList(Node* list){
-  Node* node = list->next;
-  while (node != list)
-  {
-    printf("%d",node->data);
-    node = node->next;
-  }
-  printf("NULL");
+Queue InitQueue()
+{  //初始化队列
+    Queue seq;
+    for(int i = 0; i < QueueMax; i++) {
+        seq.data[i] = NULL;
+    }
+    seq.head = 0;
+    seq.rear = -1;
+    seq.len = 0;
+    return seq;
 }
 
-int main(){
-  system("pause");
-  return 0;
+int IsEmptyQueue(Queue seq)
+{  //队列判空
+    if (seq.len == 0) {
+        return 1;
+    }
+    return 0;
 }
+
+int IsFullQueue(Queue seq)
+{  //队列判满
+    if (seq.len == QueueMax) {
+        return 1;
+    }
+    return 0;
+}
+
+void PushQueue(Queue *seq, BiTree T)
+{  //入队
+    if (IsFullQueue(*seq)) {
+        printf("ErrorFull");
+        return;
+    }
+    seq->rear = (seq->rear + 1) % QueueMax;
+    seq->len++;
+    seq->data[seq->rear] = T;
+}
+
+void PopQueue(Queue *seq, BiTree *T)
+{  //出队
+    if (IsEmptyQueue(*seq)) {
+        printf("ErrorEmpty");
+        return;
+    }
+    seq->head = (seq->head + 1) % QueueMax;
+    *T = seq->data[seq->head];
+    seq->len--;
+}
+
+void LayerOrder(BiTree T)
+{  //层序遍历
+    Queue seq;
+    seq = InitQueue();
+    BiTree tmp;
+    tmp = T;
+    PushQueue(&seq, tmp);
+    while(!IsEmptyQueue(seq)) {
+        printf("%d", tmp->data);
+        if (tmp->LChild != NULL) {
+            PushQueue(&seq, tmp->LChild);
+        }
+        if (tmp->RChild != NULL) {
+            PushQueue(&seq, tmp->RChild);
+        }
+        PopQueue(&seq, &tmp);
+    }
+}
+
